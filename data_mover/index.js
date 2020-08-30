@@ -69,17 +69,23 @@ async function main() {
     const messagesSet = await getMessages(sheetsObj)
     const messages = await getFirebaseMessages(db)
 
+    let count = 0
+    const uniqueMessages = new Set()
     for (const message of Object.values(messages)) {
         await addToSheets(sheetsObj, messagesSet, message)
             .then(res => {
                 console.log(res)
                 if (res === 1)
-                    sleep(2000)
+                    sleep(500)
             })
             .catch(err => { console.log(err) })
+
+        count += 1
+        uniqueMessages.add(message.body)
     }
 
     console.log('All messages processed.')
+    console.log('Total unique messages in firebase db:', uniqueMessages.size, count)
 }
 
 main()
