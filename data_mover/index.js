@@ -55,6 +55,7 @@ function addToSheets(sheets, messagesSet, message) {
             valueInputOption: 'RAW',
             resource,
         }).then(res => {
+            messagesSet.add(message.body)
             resolve(1)
             return
         }).catch(err => {
