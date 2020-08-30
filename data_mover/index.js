@@ -1,4 +1,4 @@
-const { google } = require('googleapis')
+const { google, reseller_v1 } = require('googleapis')
 
 const sleep = require('system-sleep')
 
@@ -37,24 +37,29 @@ function addToSheets(sheets, messagesSet, message) {
         if (messagesSet.has(message.body)) {
             console.log('Already exists.')
             resolve(-1)
+            return
         }
 
         if (message.user2.length == 13 && !isNaN(message.user2.slice(1))) {
             console.log('Maybe personal.')
             resolve(-1)
+            return
         }
 
         const values = [[message.body]]
         const resource = { values }
+
         sheets.spreadsheets.values.append({
             spreadsheetId: spreadsheetId,
             range: 'Dataset!A2:A',
             valueInputOption: 'RAW',
             resource,
-        }, (err, res) => {
-            if (err) { console.log(err); resolve(-1) }
-            messagesSet.add(message.body)
+        }).then(res => {
             resolve(1)
+            return
+        }).catch(err => {
+            resolve(2)
+            return
         })
     })
 }
@@ -65,25 +70,34 @@ async function main() {
 
     const sheetsClient = await sheets.getSheetsClient()
     const sheetsObj = google.sheets({ version: 'v4', auth: sheetsClient })
+    sheetsObj.spreadsheets.values.append
 
     const messagesSet = await getMessages(sheetsObj)
     const messages = await getFirebaseMessages(db)
 
     let count = 0
     const uniqueMessages = new Set()
+
     for (const message of Object.values(messages)) {
-        await addToSheets(sheetsObj, messagesSet, message)
-            .then(res => {
-                console.log(res)
-                if (res === 1)
-                    sleep(500)
-            })
-            .catch(err => { console.log(err) })
+        res = await addToSheets(sheetsObj, messagesSet, message)
+        
+        if (res == 1) {
+            console.log('Added.')
+            sleep(500)
+        }
+
+        if (res == 2) {
+            console.log('There was an error.')
+            break
+        }
 
         count += 1
         uniqueMessages.add(message.body)
     }
 
+    // ***** For test - don't delete *****
+    // await addToSheets(sheetsObj, messagesSet, { body: 'This is a test message. Please skip this.', user2: 'siddhantkushwaha' })
+    
     console.log('All messages processed.')
     console.log('Total unique messages in firebase db:', uniqueMessages.size, count)
 }
