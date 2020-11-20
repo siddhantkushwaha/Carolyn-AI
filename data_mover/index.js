@@ -71,8 +71,7 @@ async function main() {
 
     const sheetsClient = await sheets.getSheetsClient()
     const sheetsObj = google.sheets({ version: 'v4', auth: sheetsClient })
-    sheetsObj.spreadsheets.values.append
-
+    
     const messagesSet = await getMessages(sheetsObj)
     const messages = await getFirebaseMessages(db)
 
@@ -96,9 +95,6 @@ async function main() {
         uniqueMessages.add(message.body)
     }
 
-    // ***** For test - don't delete *****
-    // await addToSheets(sheetsObj, messagesSet, { body: 'This is a test message. Please skip this.', user2: 'siddhantkushwaha' })
-    
     console.log('All messages processed.')
     console.log('Total unique messages in firebase db:', uniqueMessages.size, count)
 }
