@@ -49,16 +49,16 @@ def augment(data_path):
 
     result = []
 
-    for i in spam_messages[:4000]:
+    for i in spam_messages[:max_n]:
         result.append({'Body': i, 'Class': 'spam'})
 
-    for i in otp_messages[:4000]:
+    for i in otp_messages[:max_n]:
         result.append({'Body': i, 'Class': 'otp'})
 
-    for i in txn_messages[:4000]:
+    for i in txn_messages[:max_n]:
         result.append({'Body': i, 'Class': 'transaction'})
 
-    for i in upd_messages[:4000]:
+    for i in upd_messages[:max_n]:
         result.append({'Body': i, 'Class': 'update'})
 
     result_df = pd.DataFrame(result)
