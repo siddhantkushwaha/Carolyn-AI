@@ -6,7 +6,7 @@ const sheets = require('./sheets')
 const firebase = require('./firebase')
 const { getFirebaseDb } = require('./firebase')
 
-const spreadsheetId = '**'
+const spreadsheetId = '1DYpCOiopUimamaAAS7L04d_Omt2N_LyhAM-fPGDiL08'
 
 function getMessages(sheets) {
     return new Promise(resolve => {
@@ -83,7 +83,7 @@ async function main() {
         
         if (res == 1) {
             console.log('Added.')
-            sleep(500)
+            // sleep(500)
         }
 
         if (res == 2) {
