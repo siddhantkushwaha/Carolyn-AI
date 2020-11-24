@@ -1,5 +1,4 @@
-# carolyn_ai
-<img  src="https://raw.githubusercontent.com/siddhantkushwaha/Carolyn-Android/master/static/logo_carolyn.svg"  width="40%"/>
+# Carolyn AI
 
 This repository classifies any sms into 4 classes : **Spam**, **OTP**, **Transaction**, **Update**
 The dataset is made using Indian sms dataset and contains 1138 spam, 345 update, 309 transactional and 165 otp sms. 
