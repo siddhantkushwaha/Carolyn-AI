@@ -23,12 +23,11 @@ def augment_by_class(df, max_n):
     result = set()
     for phrase in df['Body']:
         result.add(phrase)
-        # print(f'Augmenting for {phrase}')
+        print(f'Augmenting for {phrase}')
         for item in aug.augment(phrase, n=factor):
             result.add(item)
         for item in aug2.augment(phrase, n=2):
             result.add(item)
-        
 
     return list(result)
 
