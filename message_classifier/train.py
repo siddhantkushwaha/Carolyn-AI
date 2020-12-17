@@ -1,6 +1,7 @@
 import json
 import random
 import pickle
+import sys
 
 import numpy as np
 import pandas as pd
@@ -30,6 +31,8 @@ def get_model(vocab_size, max_len):
 
     model = Sequential()
     model.add(Embedding(vocab_size, embed_dim, input_length=max_len))
+    model.add(Conv1D(128, 7, activation='relu', padding='same'))
+    model.add(MaxPooling1D(pool_size=2))
     model.add(Conv1D(128, 5, activation='relu', padding='same'))
     model.add(MaxPooling1D(pool_size=2))
     model.add(Conv1D(256, 5, activation='relu', padding='same'))
@@ -60,19 +63,27 @@ def train(train_path):
 
     # -------------------------- Tokenize --------------------------
 
-    num_words = 3000
-    tokenizer = Tokenizer(num_words=num_words, lower=True, split=' ')
+    tokenizer = Tokenizer(lower=True, split=' ')
     tokenizer.fit_on_texts(train_dataset['Body'].values)
 
-    max_len = int(np.mean([len(list(x.split(' '))) for x in train_dataset['Body']]))
+    # Removing low frequency words
+    low_count_words = [w for w,c in tokenizer.word_counts.items() if c < 3]
+    
+    for w in low_count_words:
+        del tokenizer.word_index[w]
+        del tokenizer.word_docs[w]
+        del tokenizer.word_counts[w]
+
+    vocab_size = len(tokenizer.word_index) + 1
+    
+    max_len = max([len(list(x.split(' '))) for x in train_dataset['Body']])
 
     X = tokenizer.texts_to_sequences(train_dataset['Body'].values)
     X = pad_sequences(X, padding='post', maxlen=max_len)
-
+    
     Y = to_categorical(np.asarray(train_dataset['Class_encoded']), 4)
 
-    vocab_size = (max(map(max, X))) + 1
-
+    
     # -------------------------- Split --------------------------
 
     random_seed = random.randint(1, 1000)
@@ -86,7 +97,7 @@ def train(train_path):
     # -------------------------- Train --------------------------
 
     batch_size = 128
-    epochs = 10
+    epochs = 15
 
     model.fit(x=X_train, y=Y_train, batch_size=batch_size, epochs=epochs)
 
@@ -138,7 +149,8 @@ def eval(data_path):
         if og_class == p_class:
             count += 1
         else:
-            print(message, og_class, p_class)
+            pass
+            # print(message, og_class, p_class)
 
     print(count / len(test_dataset))
 
