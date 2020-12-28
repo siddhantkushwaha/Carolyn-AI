@@ -1,13 +1,12 @@
 import json
 import random
 import pickle
-import sys
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 
 from tensorflow.python.keras import Sequential
 from tensorflow.keras.preprocessing.text import Tokenizer
