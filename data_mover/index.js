@@ -1,7 +1,5 @@
 const { google, reseller_v1 } = require('googleapis')
 
-const sleep = require('system-sleep')
-
 const sheets = require('./sheets')
 const firebase = require('./firebase')
 const { getFirebaseDb } = require('./firebase')
@@ -27,26 +25,26 @@ function getMessages(sheets) {
 function getFirebaseMessages(db) {
     return new Promise(resolve => {
         db.ref("messages/").once('value', messages => {
-            resolve(messages.val())
+            const messagesSet = new Set()
+            for (const message of Object.values(messages.val())) {
+                if (message.user2.length == 13 && !isNaN(message.user2.slice(1))) {
+                    continue
+                }
+                messagesSet.add(message.body)
+            }
+            resolve(messagesSet)
         })
     })
 }
 
 function addToSheets(sheets, messagesSet, message) {
     return new Promise(resolve => {
-        if (messagesSet.has(message.body)) {
-            console.log('Already exists.')
+        if (messagesSet.has(message)) {
             resolve(-1)
             return
         }
 
-        if (message.user2.length == 13 && !isNaN(message.user2.slice(1))) {
-            console.log('Maybe personal.')
-            resolve(-1)
-            return
-        }
-
-        const values = [[message.body]]
+        const values = [[message]]
         const resource = { values }
 
         sheets.spreadsheets.values.append({
@@ -55,7 +53,7 @@ function addToSheets(sheets, messagesSet, message) {
             valueInputOption: 'RAW',
             resource,
         }).then(res => {
-            messagesSet.add(message.body)
+            messagesSet.add(message)
             resolve(1)
             return
         }).catch(err => {
@@ -65,38 +63,35 @@ function addToSheets(sheets, messagesSet, message) {
     })
 }
 
+function sleep(ms) {
+    return new Promise((resolve) => { setTimeout(resolve, ms); });
+}
+
 async function main() {
 
     const db = await getFirebaseDb()
 
     const sheetsClient = await sheets.getSheetsClient()
     const sheetsObj = google.sheets({ version: 'v4', auth: sheetsClient })
-    
+
     const messagesSet = await getMessages(sheetsObj)
     const messages = await getFirebaseMessages(db)
 
-    let count = 0
-    const uniqueMessages = new Set()
-
-    for (const message of Object.values(messages)) {
+    for (const message of messages) {
         res = await addToSheets(sheetsObj, messagesSet, message)
-        
+
         if (res == 1) {
-            console.log('Added.')
-            // sleep(500)
+            console.log('Added -', message)
+            await sleep(1000);
         }
 
         if (res == 2) {
             console.log('There was an error.')
             break
         }
-
-        count += 1
-        uniqueMessages.add(message.body)
     }
 
     console.log('All messages processed.')
-    console.log('Total unique messages in firebase db:', uniqueMessages.size, count)
 }
 
 main()
