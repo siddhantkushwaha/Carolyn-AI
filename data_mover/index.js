@@ -10,14 +10,16 @@ function getMessages(sheets) {
     return new Promise(resolve => {
         sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            range: 'Dataset!A2:A',
+            range: 'Dataset!A2:B',
         }, (err, res) => {
             if (err) return console.log('The API returned an error: ' + err)
-            const messagesSet = new Set()
+            const messagesMap = new Map()
             for (const row of res.data.values) {
-                messagesSet.add(row[0])
+                var messageType = null
+                if (row[1]) messageType = row[1]
+                messagesMap.set(row[0], messageType)
             }
-            resolve(messagesSet)
+            resolve(messagesMap)
         })
     })
 }
@@ -37,61 +39,49 @@ function getFirebaseMessages(db) {
     })
 }
 
-function addToSheets(sheets, messagesSet, message) {
+function updateSheets(sheets, data) {
     return new Promise(resolve => {
-        if (messagesSet.has(message)) {
-            resolve(-1)
-            return
+
+        const values = []
+        for (const item of data) {
+            values.push([item[0], item[1]])
         }
 
-        const values = [[message]]
         const resource = { values }
 
-        sheets.spreadsheets.values.append({
+        sheets.spreadsheets.values.update({
             spreadsheetId: spreadsheetId,
-            range: 'Dataset!A2:A',
+            range: 'Dataset!A2:B',
             valueInputOption: 'RAW',
             resource,
         }).then(res => {
-            messagesSet.add(message)
-            resolve(1)
-            return
+            resolve(res)
         }).catch(err => {
-            resolve(2)
-            return
+            resolve(err)
         })
     })
 }
 
-function sleep(ms) {
-    return new Promise((resolve) => { setTimeout(resolve, ms); });
-}
-
 async function main() {
-
-    const db = await getFirebaseDb()
 
     const sheetsClient = await sheets.getSheetsClient()
     const sheetsObj = google.sheets({ version: 'v4', auth: sheetsClient })
+    const messagesInSheet = await getMessages(sheetsObj)
 
-    const messagesSet = await getMessages(sheetsObj)
-    const messages = await getFirebaseMessages(db)
+    const db = await getFirebaseDb()
+    const messagesInFirebase = await getFirebaseMessages(db)
 
-    for (const message of messages) {
-        res = await addToSheets(sheetsObj, messagesSet, message)
+    console.log('Messages in sheets -', messagesInSheet.size)
+    console.log('Messages in firebase - ', messagesInFirebase.size)
 
-        if (res == 1) {
-            console.log('Added -', message)
-            await sleep(1000);
-        }
-
-        if (res == 2) {
-            console.log('There was an error.')
-            break
+    for (const message of messagesInFirebase) {
+        if (!messagesInSheet.has(message)) {
+            messagesInSheet.set(message, null)
         }
     }
 
-    console.log('All messages processed.')
+    await updateSheets(sheetsObj, messagesInSheet)
+    console.log('Messages in updated sheets -', messagesInSheet.size)
 }
 
 main()
