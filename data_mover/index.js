@@ -3,8 +3,9 @@ const { google, reseller_v1 } = require('googleapis')
 const sheets = require('./sheets')
 const firebase = require('./firebase')
 const { getFirebaseDb } = require('./firebase')
+const config = require("./config/config.json");
 
-const spreadsheetId = '1DYpCOiopUimamaAAS7L04d_Omt2N_LyhAM-fPGDiL08'
+const spreadsheetId = config.spreadSheetId
 
 function getMessages(sheets) {
     return new Promise(resolve => {
