@@ -82,7 +82,6 @@ def train(train_path):
     
     Y = to_categorical(np.asarray(train_dataset['Class_encoded']), 4)
 
-    
     # -------------------------- Split --------------------------
 
     random_seed = random.randint(1, 1000)
