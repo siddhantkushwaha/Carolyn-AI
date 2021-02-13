@@ -1,3 +1,10 @@
+/*
+    This script was used to create the base dataset, and is NO LONGER SUPPOSED TO BE USED !!
+    The base dataset has finally reached 10k datapoints and from here on we'll be collecting 
+    data only based on user feedback and manual verification to improve the dataset further
+*/
+
+
 const { google, reseller_v1 } = require('googleapis')
 
 const sheets = require('./sheets')
@@ -85,4 +92,5 @@ async function main() {
     console.log('Messages in updated sheets -', messagesInSheet.size)
 }
 
-main()
+// Refer to comment at the top
+// main()
